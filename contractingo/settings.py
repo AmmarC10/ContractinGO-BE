@@ -1,4 +1,5 @@
 from pathlib import Path
+from .firebase_config import *  # This will initialize Firebase
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,13 +26,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders'
+    'rest_framework',
+    'corsheaders',
+    'firebase_auth'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -113,7 +116,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Specific domains
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",     # Next.js development server
-    "http://127.0.0.1:3000",    # Alternative localhost
-    "https://yourdomain.com",   # Future domain
+    "http://localhost:3000", # Next.js development server
 ]
