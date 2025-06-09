@@ -26,18 +26,26 @@ class SignUpView(APIView):
                 display_name=display_name
             )
 
-            custom_token = auth.create_custom_token(user.id)
+            custom_token = auth.create_custom_token(user.uid)
 
             return Response({
-                'message': 'User Created Successfully'
-            }, status = 201)
+                'success': True,
+                'data': {
+                    'uid': user.uid,
+                    'email': user.email,
+                    'displayName': user.display_name,
+                    'token': custom_token.decode('utf-8')
+                }
+            }, status = 201);
 
         except auth.EmailAlreadyExistsError:
             return Response({
+                'success': False,
                 'error': 'Email already exists'
             }, status= 400)    
         except Exception as e:
             return Response({
+                'success': False,
                 'error': str(e)
             }, status=400)
 
