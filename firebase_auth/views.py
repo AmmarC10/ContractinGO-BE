@@ -49,3 +49,31 @@ class SignUpView(APIView):
                 'error': str(e)
             }, status=400)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class GoogleSignInView(APIView):
+    def post(self, request):
+        
+        data = json.loads(request.body)
+        id_token = data.get('idToken')
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid'];
+
+        try:
+            user = auth.get_user(uid)
+        except auth.UserNotFoundError:
+            user = auth.create_user(
+                uid=uid,
+                email=decoded_token.get('email'),
+                display_name=decoded_token.get('name'),
+            )
+            
+            custom_token = auth.create_custom_token(uid);
+            return Response({
+                'success': True,
+                'data': {
+                    'uid': user.uid,
+                    'email': user.email,
+                    'displayName': user.display_name,
+                    'token': custom_token.decode('utf-8')
+                }
+            }, status = 200)
