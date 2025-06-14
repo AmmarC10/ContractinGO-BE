@@ -5,6 +5,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import render
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -52,31 +55,48 @@ class SignUpView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class GoogleSignInView(APIView):
     def post(self, request):
-        
-        data = json.loads(request.body)
-        id_token = data.get('idToken')
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid'];
-
         try:
-            user = auth.get_user(uid)
-        except auth.UserNotFoundError:
-            user = auth.create_user(
-                uid=uid,
-                email=decoded_token.get('email'),
-                display_name=decoded_token.get('name'),
-            )
+            data = json.loads(request.body)
+            id_token = data.get('token') 
+
+            try:
+                decoded_token = auth.verify_id_token(id_token)
+                uid = decoded_token['uid']
+            except auth.InvalidIdTokenError:
+                return Response({
+                    'success': False,
+                    'error': 'Invalid authentication token'
+                }, status=400)
+
+            try:
+                user = auth.get_user(uid)
+                is_new_user = False
+            except auth.UserNotFoundError:
+                user = auth.create_user(
+                    uid=uid,
+                    email=decoded_token.get('email'),
+                    display_name=decoded_token.get('name'),
+                )
+                is_new_user = True
+
+            custom_token = auth.create_custom_token(uid)
             
-            custom_token = auth.create_custom_token(uid);
             return Response({
                 'success': True,
                 'data': {
                     'uid': user.uid,
                     'email': user.email,
                     'displayName': user.display_name,
-                    'token': custom_token.decode('utf-8')
+                    'token': custom_token.decode('utf-8'),
+                    'isNewUser': is_new_user
                 }
-            }, status = 200)
+            }, status=200)
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SignInView(APIView):
