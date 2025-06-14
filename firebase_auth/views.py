@@ -113,4 +113,3 @@ class SignInView(APIView):
                 'error': str(e)
             }, status=400)
 
-
