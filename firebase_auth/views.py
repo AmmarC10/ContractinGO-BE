@@ -4,10 +4,9 @@ from firebase_admin import auth
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import render
+from .models import User
+from .serializers import UserSerializer
 import json
-import logging
-
-logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -26,7 +25,14 @@ class SignUpView(APIView):
             user = auth.create_user(
                 email=email,
                 password=password,
-                display_name=display_name
+                display_name=display_name,
+            )
+
+            User.objects.get_or_create(
+                uid=user.uid,
+                email=user.email,
+                profile_photo=user.photo_url,
+                name=display_name
             )
 
             custom_token = auth.create_custom_token(user.uid)
@@ -79,6 +85,12 @@ class GoogleSignInView(APIView):
                 )
                 is_new_user = True
 
+            User.objects.get_or_create(
+                uid=user.uid,
+                email=user.email,
+                profile_photo=user.photo_url,
+                name=decoded_token.get('name')
+            )
             custom_token = auth.create_custom_token(uid)
             
             return Response({
@@ -133,3 +145,18 @@ class SignInView(APIView):
                 'error': str(e)
             }, status=400)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class GetUser(APIView):
+    def get(self, request):
+        uid = request.GET.get('uid')
+        if not uid:
+            return Response({'success': False, 'error': 'UID is required'}, status = 400)
+        try:
+            user = User.objects.get(uid=uid)
+            userSerializer = UserSerializer(user)
+            return Response({
+                'success': True,
+                'data': userSerializer.data
+            }, status=200)
+        except User.DoesNotExist:
+            return Response({'success': False, 'error': 'User Not Found'}, status=404)
