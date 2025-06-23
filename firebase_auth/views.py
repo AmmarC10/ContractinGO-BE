@@ -160,3 +160,41 @@ class GetUser(APIView):
             }, status=200)
         except User.DoesNotExist:
             return Response({'success': False, 'error': 'User Not Found'}, status=404)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateUserByUID(APIView):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            uid = data.get('uid')
+
+            if not uid:
+                return Response({
+                    'success': False,
+                    'error': 'UID is required'
+                }, status=400)
+            
+            try:
+                user = User.objects.get(uid=uid)
+            except User.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'User Not Found'
+                }, status=404)
+
+            if 'name' in data:
+                user.name = data['name']
+            if 'phone_number' in data:
+                user.phone_number = data['phone_number']
+            
+            user.save()
+            user_serializer = UserSerializer(user)
+            return Response({
+                'success': True,
+                'data': user_serializer.data
+            }, status=200)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=500)
