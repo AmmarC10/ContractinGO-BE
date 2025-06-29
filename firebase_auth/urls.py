@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import SignUpView, GoogleSignInView, SignInView, GetUser, UpdateUserByUID
+from .views import SignUpView, GoogleSignInView, SignInView, GetUser, UpdateUserByUID, ChangePassword
 
 urlpatterns = [
     path('signup/', SignUpView.as_view(), name='User Sign Up'),
     path('gmailSignUp/', GoogleSignInView.as_view(), name='Sign in with gmail'),
     path('login/', SignInView.as_view(), name="User Sign In" ),
     path('user/', GetUser.as_view(), name="Get User"),
-    path('updateUser/', UpdateUserByUID.as_view(), name="Update User")
+    path('updateUser/', UpdateUserByUID.as_view(), name="Update User"),
+    path('updatePassword/', ChangePassword.as_view(), name="Change Password" )
 ]

@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from firebase_admin import auth
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -198,3 +199,51 @@ class UpdateUserByUID(APIView):
                 'success': False,
                 'error': str(e)
             }, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ChangePassword(APIView):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            uid = data.get('uid')
+            new_password = data.get('newPassword')
+
+            auth.update_user(uid, password=newPassword)
+            return Response({
+                'success': True,
+                'message': 'Password Updated Successfully'
+            }, status=200)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status = 500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadProfilePhoto(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request):
+        uid = request.data.get('uid')
+        file_obj = request.FILES.get('profile_photo')
+
+        try:
+            # Generate a unique file name
+            filename = f"profile_photos/{uid}_{uuid_uuid4()}.jpg"
+
+            # Upload to firebase storage
+            bucket = storage.bucket()
+            blob = bucket.blob(filename)
+            blob.upload_from_file(file_obj, content_type=file_obj.content_type)
+            blob.make_public()
+            photo_url = blob.public_url
+
+            auth.update_user(uid, photo_url = photo_url)
+
+            user = User.objects.get(uid=uid)
+            user.profile_photo = photo_url
+            user.save()
+
+            return Response({'success': True, 'message': 'Photo Successfully Updated'}, status=200)
+        except exception as e:
+            return Response({'success': False, 'error': str(e)}, status=500) 
