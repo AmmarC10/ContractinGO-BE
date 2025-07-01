@@ -7,6 +7,8 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import render
 from .models import User
 from .serializers import UserSerializer
+from contractingo.supabase_client import supabase
+import uuid
 import json
 
 # Create your views here.
@@ -206,7 +208,7 @@ class ChangePassword(APIView):
         try:
             data = json.loads(request.body)
             uid = data.get('uid')
-            new_password = data.get('newPassword')
+            newPassword = data.get('newPassword')
 
             auth.update_user(uid, password=newPassword)
             return Response({
@@ -227,23 +229,23 @@ class UploadProfilePhoto(APIView):
         uid = request.data.get('uid')
         file_obj = request.FILES.get('profile_photo')
 
+        if not uid:
+            return Response({'success': False, 'error': 'UID is required'}, status=400)
+
         try:
             # Generate a unique file name
-            filename = f"profile_photos/{uid}_{uuid_uuid4()}.jpg"
+            filename = f"{uid}_{uuid.uuid4()}.jpg"
+            filePath = f"profile_photos/{filename}"
 
-            # Upload to firebase storage
-            bucket = storage.bucket()
-            blob = bucket.blob(filename)
-            blob.upload_from_file(file_obj, content_type=file_obj.content_type)
-            blob.make_public()
-            photo_url = blob.public_url
+            result = supabase.storage.from_('profile-photos').upload(path=filePath, file=file_obj.read(), file_options={"content-type": file_obj.content_type})         
 
+            photo_url = f"{supabase.storage.from_('profile-photos').get_public_url(filePath)}"
             auth.update_user(uid, photo_url = photo_url)
-
+            
             user = User.objects.get(uid=uid)
             user.profile_photo = photo_url
             user.save()
 
             return Response({'success': True, 'message': 'Photo Successfully Updated'}, status=200)
-        except exception as e:
+        except Exception as e:
             return Response({'success': False, 'error': str(e)}, status=500) 
