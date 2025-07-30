@@ -20,9 +20,9 @@ class Ad(models.Model):
     is_active = models.BooleanField(default=True)
 
     # Photos
-    photo_1 = models.ImageField(upload_to='ads/photos/', blank=True, null=True)
-    photo_2 = models.ImageField(upload_to='ads/photos/', blank=True, null=True)
-    photo_3 = models.ImageField(upload_to='ads/photos/', blank=True, null=True)
+    photo_1 = models.URLField(blank=True, null=True)
+    photo_2 = models.URLField(blank=True, null=True)
+    photo_3 = models.URLField(blank=True, null=True)
 
     # Search optimization fields
     location = models.CharField(max_length=200, blank=True, help_text="City / General Area")
@@ -48,12 +48,5 @@ class Ad(models.Model):
     
     def __str__(self):
         return f"{self.title} by {self.user.name}"
-    
-    def get_photos(self):
-        photos = []
-        for photo in [self.photo_1, self.photo_2, self.photo_3]:
-            if photo:
-                photos.append(photo)
-        return photos
 
     
