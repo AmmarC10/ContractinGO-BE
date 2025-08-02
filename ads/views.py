@@ -68,14 +68,14 @@ class AdViewSet(viewsets.ModelViewSet):
 
     def upload_to_supabase(self, file_obj, user_uid):
         filename = f"{user_uid}_{uuid.uuid4()}.jpg"
-        filePath = f"ad_photos/{filename}"
+        filePath = f"ad-photos/{filename}"
 
         result = supabase.storage.from_('ad-photos').upload(
             path=filePath, 
             file=file_obj.read(),
             file_options={'content-type': file_obj.content_type})
 
-        photo_url = supabase.storage.from_('ad_photos').get_public_url(filePath)
+        photo_url = supabase.storage.from_('ad-photos').get_public_url(filePath)
         return photo_url  
 
 

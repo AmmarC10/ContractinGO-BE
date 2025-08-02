@@ -3,7 +3,6 @@ from .models import Ad
 
 class AdSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.name', read_only=True)
-    photos = serializers.SerializerMethodField()
 
     class Meta:
         model = Ad

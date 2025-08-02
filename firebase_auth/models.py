@@ -6,3 +6,7 @@ class User(models.Model):
     profile_photo = models.URLField(blank=True, null=True)
     name = models.CharField(max_length=128)
     phone_number = models.CharField(max_length=128, null=True)
+
+    @property
+    def is_authenticated(self):
+        return True 

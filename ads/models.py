@@ -4,12 +4,8 @@ from firebase_auth.models import User
 class Ad(models.Model):
 
     AD_TYPES = [
-        ('videographer', 'Videographer'),
-        ('photographer', 'Photographer'),
-        ('snowRemoval', 'Snow Removal'),
-        ('automotive', 'Automotive'),
-        ('moving', 'Moving'),
-        ('websiteDesign', 'Website Design'),
+        ('MECHANIC', 'Mechanic'),
+        ('OTHER', 'Other'),
     ]
 
     # Ad fields
