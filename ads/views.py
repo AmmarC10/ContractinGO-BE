@@ -29,7 +29,10 @@ class AdViewSet(viewsets.ModelViewSet):
     def my_ads(self, request):
         ads = Ad.objects.filter(user=request.user)
         serializer = self.get_serializer(ads, many=True)
-        return Response(serializer.data)   
+        return Response({
+            'success': True,
+            'data': serializer.data
+        })   
 
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def create_ad(self, request):
