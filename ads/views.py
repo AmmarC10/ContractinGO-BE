@@ -15,8 +15,11 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.user == request.user
 
 class AdViewSet(viewsets.ModelViewSet):
+    # Want to work with all ads in the database
     queryset = Ad.objects.all()
+    # Want to use the AdSerializer to serialize the data
     serializer_class = AdSerializer
+    # Want to make sure the user is authenticated and only the owner can edit or delete the ad
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
@@ -36,22 +39,18 @@ class AdViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def create_ad(self, request):
-        if request.content_type.startswith('multipart/form-data'):
-            ad_data_json = request.data.get('ad_data', {})
-            ad_data = json.loads(ad_data_json)
+        ad_data_json = request.data.get('ad_data', {})
+        ad_data = json.loads(ad_data_json)
 
-            photos = request.FILES.getlist('photos')
-            photo_urls = []
+        photos = request.FILES.getlist('photos')
+        photo_urls = []
 
-            for i, photo in enumerate(photos[:3]):
-                photo_url = self.upload_to_supabase(photo, request.user.uid)
-                photo_urls.append(photo_url)
-            
-            for i, photo_url in enumerate(photo_urls, 1):
-                ad_data[f'photo_{i}'] = photo_url
-        else:
-            ad_data = request.data
-            photos = []
+        for i, photo in enumerate(photos[:3]):
+            photo_url = self.upload_to_supabase(photo, request.user.uid)
+            photo_urls.append(photo_url)
+        
+        for i, photo_url in enumerate(photo_urls, 1):
+            ad_data[f'photo_{i}'] = photo_url
 
         ad_data['user'] = request.user.id
 
