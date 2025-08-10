@@ -249,3 +249,17 @@ class UploadProfilePhoto(APIView):
             return Response({'success': True, 'message': 'Photo Successfully Updated'}, status=200)
         except Exception as e:
             return Response({'success': False, 'error': str(e)}, status=500) 
+
+class GetUserById(APIView):
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+            user_serializer = UserSerializer(user)
+            return Response({
+                'success': True,
+                'data': user_serializer.data
+            }, status=200)
+        except User.DoesNotExist:
+            return Response({'success': False, 'error': 'User Not Found'}, status=404)
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=500)

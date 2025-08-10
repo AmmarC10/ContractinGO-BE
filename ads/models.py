@@ -14,6 +14,7 @@ class Ad(models.Model):
     is_available_now = models.BooleanField(default=False)
     ad_type = models.CharField(choices = AD_TYPES)
     is_active = models.BooleanField(default=True)
+    cost = models.CharField(max_length=200)
 
     # Photos
     photo_1 = models.URLField(blank=True, null=True)
