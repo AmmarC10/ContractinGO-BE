@@ -1,18 +1,20 @@
 from django.db import models
 from firebase_auth.models import User
 
-class Ad(models.Model):
+class AdType(models.Model):
+    name = models.CharField(max_length=200)
+    icon = models.URLField(blank=True, null=True)
 
-    AD_TYPES = [
-        ('MECHANIC', 'Mechanic'),
-        ('OTHER', 'Other'),
-    ]
+    def __str__(self):
+        return self.name
+
+class Ad(models.Model):
 
     # Ad fields
     title = models.CharField(max_length = 200)
     description = models.TextField()
     is_available_now = models.BooleanField(default=False)
-    ad_type = models.CharField(choices = AD_TYPES)
+    ad_type = models.ForeignKey(AdType, on_delete=models.PROTECT, related_name='adType')
     is_active = models.BooleanField(default=True)
     cost = models.CharField(max_length=200)
 

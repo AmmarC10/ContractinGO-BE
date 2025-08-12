@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Ad
-from .serializers import AdSerializer
+from .models import Ad, AdType
+from .serializers import AdSerializer, AdTypeSerializer
 import uuid
 import json
 from contractingo.supabase_client import supabase
@@ -36,6 +36,15 @@ class AdViewSet(viewsets.ModelViewSet):
             'success': True,
             'data': serializer.data
         })   
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def getAllAdTypes(self, request):
+        ad_types = AdType.objects.all()
+        serializer = AdTypeSerializer(ad_types, many=True)
+        return Response({
+            'success': True,
+            'data': serializer.data
+        })
 
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def create_ad(self, request):
@@ -79,5 +88,7 @@ class AdViewSet(viewsets.ModelViewSet):
 
         photo_url = supabase.storage.from_('ad-photos').get_public_url(filePath)
         return photo_url  
+
+    
 
 

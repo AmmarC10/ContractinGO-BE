@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import Ad
+from .models import Ad, AdType
+
+class AdTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdType
+        fields = ['id', 'name', 'icon']
 
 class AdSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.name', read_only=True)
@@ -9,6 +14,7 @@ class AdSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'is_available_now', 
             'ad_type', 'user', 'user_name', 'photo_1', 'photo_2', 'photo_3',
-            'location', 'tags', 'skills', 'created_at', 'updated_at', 'is_active', 'cost']
+            'location', 'tags', 'skills', 'created_at', 'updated_at', 'is_active', 
+            'cost', 'ad_type']
         
-        readOnlyFields =  ['user', 'user_name', 'created_at']
+        readOnlyFields =  ['user', 'user_name', 'created_at', 'ad_type']
