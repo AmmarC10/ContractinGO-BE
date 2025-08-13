@@ -42,11 +42,10 @@ class AdViewSet(viewsets.ModelViewSet):
         ad_types = AdType.objects.all()
         serializer = AdTypeSerializer(ad_types, many=True)
         return Response({
-            'success': True,
             'data': serializer.data
         })
 
-    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser], permission_classes=[permissions.AllowAny])
     def create_ad(self, request):
         ad_data_json = request.data.get('ad_data', {})
         ad_data = json.loads(ad_data_json)

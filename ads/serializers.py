@@ -15,6 +15,6 @@ class AdSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'is_available_now', 
             'ad_type', 'user', 'user_name', 'photo_1', 'photo_2', 'photo_3',
             'location', 'tags', 'skills', 'created_at', 'updated_at', 'is_active', 
-            'cost', 'ad_type']
+            'cost']
         
-        readOnlyFields =  ['user', 'user_name', 'created_at', 'ad_type']
+        read_only_fields =  ['user', 'user_name', 'created_at']
