@@ -25,6 +25,30 @@ class Command(BaseCommand):
             {
                 'name': 'Photographer',
                 'icon': '📷'
+            },
+            {
+                'name': 'Snow Removal',
+                'icon': '❄️'
+            },
+            {
+                'name': 'Landscaper',
+                'icon': '🌳'
+            },
+            {
+                'name': 'Moving Services',
+                'icon': '🚚'
+            },
+            {
+                'name': 'Cleaning Services',
+                'icon': '🧹'
+            },
+            {
+                'name': 'Website/App Development',
+                'icon': '💻'
+            },
+            {
+                'name': 'Electrical',
+                'icon': '⚡'
             }
         ]
         

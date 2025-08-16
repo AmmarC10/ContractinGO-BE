@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Ad, AdType
@@ -75,7 +75,6 @@ class AdViewSet(viewsets.ModelViewSet):
             'error': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
-
     def upload_to_supabase(self, file_obj, user_uid):
         filename = f"{user_uid}_{uuid.uuid4()}.jpg"
         filePath = f"ad-photos/{filename}"
@@ -87,6 +86,16 @@ class AdViewSet(viewsets.ModelViewSet):
 
         photo_url = supabase.storage.from_('ad-photos').get_public_url(filePath)
         return photo_url  
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def get_ads_by_type(request, ad_type_id):
+    ads = Ad.objects.filter(ad_type_id=ad_type_id, is_active=True)
+    serializer = AdSerializer(ads, many=True)
+    return Response({
+        'success': True,
+        'data': serializer.data
+    })
 
     
 
