@@ -74,6 +74,10 @@ class AdViewSet(viewsets.ModelViewSet):
             'success': False,
             'error': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def perform_destroy(self, instance):
+        self.delete_photos_from_supabase(instance)
+        instance.delete()
 
     def upload_to_supabase(self, file_obj, user_uid):
         filename = f"{user_uid}_{uuid.uuid4()}.jpg"
@@ -87,6 +91,25 @@ class AdViewSet(viewsets.ModelViewSet):
         photo_url = supabase.storage.from_('ad-photos').get_public_url(filePath)
         return photo_url  
 
+    def delete_photos_from_supabase(self, ad_instance):
+        photos_to_delete = []
+
+        # Check each photo field and extract the filename
+        for i in range(1, 4):
+            photo_url = getattr(ad_instance, f'photo_{i}', None)
+
+            if photo_url:
+                # Extract filename from the full public URL and remove query string
+                filename = photo_url.split('/')[-1].split('?')[0]  # Remove everything after '?'
+                photos_to_delete.append(filename)  
+        
+        # Delete photos from Supabase storage
+        for photo_path in photos_to_delete:
+            # Construct the full storage path
+            full_path = f"ad-photos/{photo_path}"
+            # Try the deletion
+            result = supabase.storage.from_('ad-photos').remove([full_path])
+          
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def get_ads_by_type(request, ad_type_id):
