@@ -79,6 +79,41 @@ class AdViewSet(viewsets.ModelViewSet):
         self.delete_photos_from_supabase(instance)
         instance.delete()
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Delete old photos and add new ones on update
+        self.delete_photos_from_supabase(instance)
+
+        for i in range(1, 4):
+            setattr(instance, f'photo_{i}', None)
+        
+        photos = request.FILES.getlist('photos')
+        photo_urls = []
+        for i, photo in enumerate(photos[:3]):
+            photo_url = self.upload_to_supabase(photo, request.user.uid)
+            photo_urls.append(photo_url)
+    
+        ad_data_json = request.data.get('ad_data', {})
+        request_data = json.loads(ad_data_json)
+
+        for i, photo_url in enumerate(photo_urls, 1):
+            request_data[f'photo_{i}'] = photo_url
+        
+        serializer = self.get_serializer(instance, data=request_data, partial=kwargs.get('partial', False))
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response({
+                'success': True,
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'success': False,
+            'error': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+
     def upload_to_supabase(self, file_obj, user_uid):
         filename = f"{user_uid}_{uuid.uuid4()}.jpg"
         filePath = f"ad-photos/{filename}"
