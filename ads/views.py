@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Ad, AdType
+from .models import Ad, AdType, Photo
 from .serializers import AdSerializer, AdTypeSerializer
 import uuid
 import json
@@ -26,7 +26,18 @@ class AdViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
     def perform_destroy(self, instance):
+        # Get all photo URLs before deletion
+        photo_urls = list(instance.photos.values_list('image_url', flat=True))
+        
+        # Delete the ad (cascades to photos)
         instance.delete()
+        
+        # Delete from Supabase after database deletion
+        for photo_url in photo_urls:
+            if photo_url:
+                filename = photo_url.split('/')[-1].split('?')[0]
+                full_path = f"ad-photos/{filename}"
+                supabase.storage.from_('ad-photos').remove([full_path])
     
     @action(detail=False, methods=['get'])
     def my_ads(self, request):
@@ -51,55 +62,61 @@ class AdViewSet(viewsets.ModelViewSet):
         ad_data = json.loads(ad_data_json)
 
         photos = request.FILES.getlist('photos')
-        photo_urls = []
-
-        for i, photo in enumerate(photos[:3]):
-            photo_url = self.upload_to_supabase(photo, request.user.uid)
-            photo_urls.append(photo_url)
-        
-        for i, photo_url in enumerate(photo_urls, 1):
-            ad_data[f'photo_{i}'] = photo_url
+       
+        ad_data.pop('photo_1', None)
+        ad_data.pop('photo_2', None)
+        ad_data.pop('photo_3', None)
 
         ad_data['user'] = request.user.id
 
         serializer = self.get_serializer(data=ad_data)
 
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            ad = serializer.save(user=request.user)
+
+            for i, photo in enumerate(photos[:3]):
+                photo_url = self.upload_to_supabase(photo, request.user.uid)
+                Photo.objects.create(ad=ad, image_url=photo_url, order=i)
+
+            response_serializer = self.get_serializer(ad)
             return Response({
                 'success': True,
-                'data': serializer.data
+                'data': response_serializer.data
             }, status=status.HTTP_201_CREATED)
         return Response({
             'success': False,
             'error': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    def perform_destroy(self, instance):
-        self.delete_photos_from_supabase(instance)
-        instance.delete()
-
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        # Delete old photos and add new ones on update
-        self.delete_photos_from_supabase(instance)
-
-        for i in range(1, 4):
-            setattr(instance, f'photo_{i}', None)
-        
-        photos = request.FILES.getlist('photos')
-        photo_urls = []
-        for i, photo in enumerate(photos[:3]):
-            photo_url = self.upload_to_supabase(photo, request.user.uid)
-            photo_urls.append(photo_url)
-    
         ad_data_json = request.data.get('ad_data', {})
         request_data = json.loads(ad_data_json)
-
-        for i, photo_url in enumerate(photo_urls, 1):
-            request_data[f'photo_{i}'] = photo_url
         
+        # safety pops
+        request_data.pop('photo_1', None)
+        request_data.pop('photo_2', None)
+        request_data.pop('photo_3', None)
+
+        # Remove photos
+        removed_photo_ids = request_data.pop('removed_photo_ids', [])
+
+        if removed_photo_ids:
+            photos_to_delete = instance.photos.filter(id__in=removed_photo_ids)
+
+            for photo in photos_to_delete:
+                filename = photo.image_url.split('/')[-1].split('?')[0]
+                full_path = f"ad-photos/{filename}"
+                supabase.storage.from_('ad-photos').remove([full_path])
+            
+            photos_to_delete.delete()
+        
+        photos = request.FILES.getlist('photos')
+        for i, photo in enumerate(photos):
+            photo_url = self.upload_to_supabase(photo, request.user.uid)
+            Photo.objects.create(ad=instance, image_url=photo_url, order=instance.photos.count() + i)
+                
         serializer = self.get_serializer(instance, data=request_data, partial=kwargs.get('partial', False))
 
         if serializer.is_valid():
@@ -124,26 +141,10 @@ class AdViewSet(viewsets.ModelViewSet):
             file_options={'content-type': file_obj.content_type})
 
         photo_url = supabase.storage.from_('ad-photos').get_public_url(filePath)
-        return photo_url  
+        return photo_url 
 
-    def delete_photos_from_supabase(self, ad_instance):
-        photos_to_delete = []
+    
 
-        # Check each photo field and extract the filename
-        for i in range(1, 4):
-            photo_url = getattr(ad_instance, f'photo_{i}', None)
-
-            if photo_url:
-                # Extract filename from the full public URL and remove query string
-                filename = photo_url.split('/')[-1].split('?')[0]  # Remove everything after '?'
-                photos_to_delete.append(filename)  
-        
-        # Delete photos from Supabase storage
-        for photo_path in photos_to_delete:
-            # Construct the full storage path
-            full_path = f"ad-photos/{photo_path}"
-            # Try the deletion
-            result = supabase.storage.from_('ad-photos').remove([full_path])
           
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])

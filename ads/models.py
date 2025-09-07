@@ -18,11 +18,6 @@ class Ad(models.Model):
     is_active = models.BooleanField(default=True)
     cost = models.CharField(max_length=200)
 
-    # Photos
-    photo_1 = models.URLField(blank=True, null=True)
-    photo_2 = models.URLField(blank=True, null=True)
-    photo_3 = models.URLField(blank=True, null=True)
-
     # Search optimization fields
     location = models.CharField(max_length=200, blank=True, help_text="City / General Area")
     tags = models.CharField(max_length = 200, blank=True, help_text="Comma-separated tags like: wedding (for photography), blog (for website)")
@@ -47,5 +42,14 @@ class Ad(models.Model):
     
     def __str__(self):
         return f"{self.title} by {self.user.name}"
+
+class Photo(models.Model):
+    ad = models.ForeignKey(Ad, on_delete=models.CASCADE, related_name='photos')
+    image_url = models.URLField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'uploaded_at']
 
     
