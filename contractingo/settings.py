@@ -34,7 +34,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'firebase_auth',
-    'ads'
+    'ads',
+    'messaging'
 ]
 
 MIDDLEWARE = [
