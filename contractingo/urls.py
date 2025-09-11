@@ -20,5 +20,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('firebase_auth/', include('firebase_auth.urls')),
-    path('api/ads/', include('ads.urls'))
+    path('api/ads/', include('ads.urls')),
+    path('api/messaging/', include('messaging.urls')),
 ]
