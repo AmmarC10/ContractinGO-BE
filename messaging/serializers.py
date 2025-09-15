@@ -6,7 +6,7 @@ from ads.serializers import AdSerializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'name', 'email','profile_photo']
+        fields = ['id', 'uid','name', 'email','profile_photo']
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)

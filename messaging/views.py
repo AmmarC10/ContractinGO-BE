@@ -133,7 +133,30 @@ def get_unread_count(request):
         is_read=False
     ).exclude(sender=request.user).count()
     
-    return Response({'unread_count': unread_count})
+    return Response({
+        'success': True,
+        'unread_count': unread_count
+        })
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_conversation_unread_count(request, conversation_id):
+    """
+    Get count of unread messages for a specific conversation
+    """
+    conversation = get_object_or_404(
+        Conversation.objects.filter(participants=request.user),
+        id=conversation_id
+    )
+
+    unread_count = Message.objects.filter(
+        conversation=conversation,
+        is_read=False
+    ).exclude(sender=request.user).count()
+    return Response({
+        'success': True,
+        'unread_count': unread_count}
+    )
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
