@@ -1,5 +1,5 @@
 from pathlib import Path
-from .firebase_config import *  # This will initialize Firebase
+# from .firebase_config import *  # This will initialize Firebase
 import os
 from dotenv import load_dotenv
 
@@ -33,7 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'firebase_auth',
+    'channels',
+    'supabase_auth',
     'ads',
     'messaging'
 ]
@@ -67,12 +68,35 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'contractingo.wsgi.application'
+ASGI_APPLICATION = 'contractingo.asgi.application'
+
+# Channel layers configuration 
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             'hosts': [os.getenv('REDIS_URL', 'redis://localhost:6379/1')],
+#             'capacity': 1500,
+#             'expiry': 60,
+#         },
+#     },
+# }
+
+# Alternative for development only (comment out Redis config above and uncomment this):
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'firebase_auth.authentication.FirebaseAuthentication'
+        'supabase_auth.authentication.SupabaseAuthentication'
     ]
 }
+
+AUTH_USER_MODEL = 'supabase_auth.User'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -135,6 +159,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS Specific domains
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", # Next.js development server
+    #"DOMAIN.com"
 ]
 
 CORS_ALLOW_METHODS = [

@@ -1,6 +1,6 @@
 from django.db import models
 from ads.models import Ad
-from firebase_auth.models import User
+from supabase_auth.models import User
 
 class Conversation(models.Model):
     ad = models.ForeignKey(Ad, on_delete=models.CASCADE, related_name='conversations')
@@ -27,3 +27,14 @@ class Message(models.Model):
     
     def __str__(self):
         return f"{self.sender.name}: {self.content[:50]}..."
+
+class MessageAttachment(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='attachments')
+    image_url = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"Attachment for message {self.message.id}"

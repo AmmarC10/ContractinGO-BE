@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class AuthConfig(AppConfig):
+class SupabaseAuthConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'firebase_auth'
+    name = 'supabase_auth'
